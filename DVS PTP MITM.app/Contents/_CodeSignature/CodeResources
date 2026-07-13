@@ -20,6 +20,14 @@
 		<data>
 		ar5xmDs9mPpaINVXiVlVqUCB8ao=
 		</data>
+		<key>Resources/dvs-ptp-mitm.command</key>
+		<data>
+		nY6WVntAYw4UzsCHaClcTREutKs=
+		</data>
+		<key>Resources/ptp-mitm.conf</key>
+		<data>
+		G59nUkSn/34WJ0w+COMiK+QMQWE=
+		</data>
 	</dict>
 	<key>files2</key>
 	<dict>
@@ -65,6 +73,28 @@
 			<key>hash2</key>
 			<data>
 			NV2dNLwgykV7aWfTBywUILBA9Lidl7F51PrkQw77SbM=
+			</data>
+		</dict>
+		<key>Resources/dvs-ptp-mitm.command</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			nY6WVntAYw4UzsCHaClcTREutKs=
+			</data>
+			<key>hash2</key>
+			<data>
+			fc90Aw/oqAuJTeTtFDfx7CMj7n92kDY2JfVDXfIp8UM=
+			</data>
+		</dict>
+		<key>Resources/ptp-mitm.conf</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			G59nUkSn/34WJ0w+COMiK+QMQWE=
+			</data>
+			<key>hash2</key>
+			<data>
+			P4BLkgOHkScdPNuosggJxEhunCebCF4eVtaS+lH3Rg8=
 			</data>
 		</dict>
 	</dict>

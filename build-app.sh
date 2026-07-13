@@ -28,4 +28,11 @@ if [ -f ptp-mitm ]; then
 	chmod +x "$RES/ptp-mitm"
 fi
 
+# Re-sign (ad-hoc) AFTER adding resources. osacompile signs the freshly built
+# app, but copying files into Resources invalidates that seal, and macOS reports
+# a bundle with a broken signature as "damaged" when it was downloaded. Signing
+# again re-seals the added files so the app opens (via right-click -> Open).
+codesign --force --deep --sign - "$APP"
+codesign --verify --strict "$APP" && echo "signature OK"
+
 echo "Built $APP"
