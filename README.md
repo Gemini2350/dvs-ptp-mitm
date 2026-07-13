@@ -51,7 +51,9 @@ Both options are read at **runtime** from a small config file
 2. Double-click **`DVS PTP MITM.app`**. A small menu opens where you can:
    - **Activate** / **Deactivate** the wrapper,
    - **Edit options** (tick PTPv2 and/or leader mode),
-   - **Show status**.
+   - **Show status** — shows both the desired config and the **live effective
+     state** (whether PTPv2 / leader are actually active in the running PTP
+     service right now, read from the running process).
 3. Enter your password once when macOS asks. The app applies the change and
    **restarts the PTP service for you** — no manual DVS restart needed.
 
@@ -115,7 +117,8 @@ Steps:
    `ptp-mitm.exe`**, so you need no compiler.
 2. Double-click **`DVS PTP MITM.cmd`**. Windows asks for administrator rights
    (UAC) once, then a menu opens where you can **Activate** / **Deactivate** the
-   wrapper, **Edit options** (PTPv2 / leader), and **Show status**.
+   wrapper, **Edit options** (PTPv2 / leader), and **Show status** (desired
+   config plus the **live effective state** read from the running PTP process).
 3. Each change is applied and the **Dante Virtual Soundcard service is restarted
    for you** — no manual restart needed.
 

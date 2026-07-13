@@ -104,13 +104,27 @@ function Edit-Options {
     else { Write-Host "`nSaved. They apply once you activate the wrapper." -ForegroundColor Green }
 }
 
+# Inspect the running PTP process to report the EFFECTIVE state -- what DVS is
+# actually running right now, independent of the config file. Works whether or
+# not the wrapper is installed (matches both ptp.exe and ptp-original.exe).
+function Get-LiveStatus {
+    $proc = Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -eq 'ptp.exe' -or $_.Name -eq 'ptp-original.exe' } |
+        Select-Object -First 1
+    if (-not $proc) { return 'PTP service not running' }
+    $cmd = " $($proc.CommandLine) "
+    $p = if ($cmd -match '\s-y2')  { 'ON' } else { 'off' }   # wrapper appends -y2=-2 for PTPv2
+    $l = if ($cmd -match '\s-s\s') { 'off' } else { 'ON' }   # DVS passes -s for slave-only
+    return "running now -> PTPv2 $p, leader $l"
+}
+
 function Show-Status {
     $state = if (Test-Installed) { 'INSTALLED' } else { 'not installed' }
     Write-Host ""
     Write-Host "Wrapper : $state"
-    Write-Host "leader  : $(if (Get-ConfValue 'leader') {1} else {0})"
-    Write-Host "ptpv2   : $(if (Get-ConfValue 'ptpv2')  {1} else {0})"
-    Write-Host "config  : $Conf"
+    Write-Host "Config (desired):  leader = $(if (Get-ConfValue 'leader') {1} else {0}), ptpv2 = $(if (Get-ConfValue 'ptpv2') {1} else {0})"
+    Write-Host "Live (effective):  $(Get-LiveStatus)"
+    Write-Host "config file: $Conf"
 }
 
 # --- menu loop --------------------------------------------------------------

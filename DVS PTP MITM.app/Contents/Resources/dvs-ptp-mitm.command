@@ -162,10 +162,26 @@ $restart" || { info "Saving options was cancelled or failed."; return; }
 	fi
 }
 
+# Inspect the currently running PTP process to report the EFFECTIVE state --
+# what DVS is actually running right now, independent of the config file. Works
+# whether or not the wrapper is installed (matches both ptp and ptp-original).
+live_status() {
+	local proc
+	proc=$(ps -axo command= 2>/dev/null | grep 'DanteVirtualSoundcard/ptp' | grep -v grep | head -1)
+	if [ -z "$proc" ]; then
+		echo "PTP service not running"
+		return
+	fi
+	local p="off" l="off"
+	case " $proc " in *" -y2"*) p="ON" ;; esac	# wrapper appends -y2=-2 for PTPv2
+	case " $proc " in *" -s "*) l="off" ;; *) l="ON" ;; esac	# DVS passes -s for slave-only
+	echo "running now -> PTPv2 $p, leader $l"
+}
+
 show_status() {
 	local state="not installed"
 	is_installed && state="INSTALLED"
-	info "Wrapper: $state\nleader = $(conf_get leader)\nptpv2 = $(conf_get ptpv2)\n\nConfig: $CONF"
+	info "Wrapper: $state\n\nConfig (desired):\n    leader = $(conf_get leader)\n    ptpv2 = $(conf_get ptpv2)\n\nLive (effective):\n    $(live_status)\n\nConfig file: $CONF"
 }
 
 # --- main menu loop ------------------------------------------------------
