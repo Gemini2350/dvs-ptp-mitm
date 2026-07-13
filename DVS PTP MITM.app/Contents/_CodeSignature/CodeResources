@@ -22,7 +22,7 @@
 		</data>
 		<key>Resources/dvs-ptp-mitm.command</key>
 		<data>
-		nY6WVntAYw4UzsCHaClcTREutKs=
+		fnO7ZftYchL9RBsNpGJDaQox9zk=
 		</data>
 		<key>Resources/ptp-mitm.conf</key>
 		<data>
@@ -79,11 +79,11 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			nY6WVntAYw4UzsCHaClcTREutKs=
+			fnO7ZftYchL9RBsNpGJDaQox9zk=
 			</data>
 			<key>hash2</key>
 			<data>
-			fc90Aw/oqAuJTeTtFDfx7CMj7n92kDY2JfVDXfIp8UM=
+			7uyCj1a6C94bZIs0muJYhg1xrX6whLNzE6bymKwqmGc=
 			</data>
 		</dict>
 		<key>Resources/ptp-mitm.conf</key>

@@ -67,19 +67,39 @@ ensure_built() {
 # the new binary/config. Best-effort: silent if the process is not running.
 RESTART_PTP='pkill -f "DanteVirtualSoundcard/ptp" 2>/dev/null || true'
 
+# Run a shell script (passed as $1) as root behind ONE native password prompt.
+#
+# The script is written to a temp file and executed via
+#   do shell script "/bin/bash '<tmp>'" with administrator privileges
+# so the AppleScript string contains only a simple path -- never the script's
+# own quotes or numbers. (Embedding the shell text directly inside the
+# AppleScript string breaks its quoting and triggers osascript syntax errors.)
+# Returns the elevated script's exit status; non-zero if the user cancels.
+run_admin() {
+	local tmp rc
+	tmp="$(mktemp -t dvs-ptp-mitm)" || return 1
+	printf '%s\n' "$1" > "$tmp"
+	osascript -e "do shell script \"/bin/bash '$tmp'\" with administrator privileges" >/dev/null
+	rc=$?
+	rm -f "$tmp"
+	return $rc
+}
+
 # --- privileged actions (single password prompt each) --------------------
 
 do_activate() {
 	ensure_built
-	# Everything privileged runs in one admin shell = one password prompt.
-	local script
-	script="set -e; cd \"$DIR\"; \
-		if [ ! -f \"$DVSDIR/ptp-original\" ]; then cp \"$DVSDIR/ptp\" \"$DVSDIR/ptp-original\"; fi; \
-		cp ptp-mitm \"$DVSDIR/ptp\"; chown root:admin \"$DVSDIR/ptp\"; chmod 755 \"$DVSDIR/ptp\"; \
-		if [ ! -f \"$CONF\" ]; then cp ptp-mitm.conf \"$CONF\"; chmod 644 \"$CONF\"; fi; \
-		$RESTART_PTP"
-	osa "do shell script \"$script\" with administrator privileges" >/dev/null
-	info "MITM wrapper activated and PTP service restarted."
+	# All privileged steps run in one elevated shell = one password prompt.
+	run_admin "set -e
+cd \"$DIR\"
+if [ ! -f \"$DVSDIR/ptp-original\" ]; then cp \"$DVSDIR/ptp\" \"$DVSDIR/ptp-original\"; fi
+cp ptp-mitm \"$DVSDIR/ptp\"
+chown root:admin \"$DVSDIR/ptp\"
+chmod 755 \"$DVSDIR/ptp\"
+if [ ! -f \"$CONF\" ]; then cp ptp-mitm.conf \"$CONF\"; chmod 644 \"$CONF\"; fi
+$RESTART_PTP" \
+		&& info "MITM wrapper activated and PTP service restarted." \
+		|| info "Activation was cancelled or failed."
 }
 
 do_deactivate() {
@@ -87,11 +107,12 @@ do_deactivate() {
 		info "Wrapper is not installed -- nothing to deactivate."
 		return
 	fi
-	local script
-	script="set -e; mv \"$DVSDIR/ptp-original\" \"$DVSDIR/ptp\"; chown root:admin \"$DVSDIR/ptp\"; \
-		$RESTART_PTP"
-	osa "do shell script \"$script\" with administrator privileges" >/dev/null
-	info "Original ptp restored and PTP service restarted."
+	run_admin "set -e
+mv \"$DVSDIR/ptp-original\" \"$DVSDIR/ptp\"
+chown root:admin \"$DVSDIR/ptp\"
+$RESTART_PTP" \
+		&& info "Original ptp restored and PTP service restarted." \
+		|| info "Deactivation was cancelled or failed."
 }
 
 # Present checkboxes for the two options and write the config file.
@@ -122,11 +143,18 @@ edit_options() {
 	case "$selection" in *"Allow DVS to become leader"*) new_leader=1 ;; esac
 
 	# Write the config as root (it lives under /Library).
-	local body restart=""
-	body="# DVS PTP MITM configuration (written by dvs-ptp-mitm.command)\nleader = $new_leader\nptpv2 = $new_ptpv2\n"
-	# If the wrapper is active, restart the PTP service so the new options apply.
-	is_installed && restart="; $RESTART_PTP"
-	osa "do shell script \"printf '$body' > '$CONF'; chmod 644 '$CONF'$restart\" with administrator privileges" >/dev/null
+	# Write the config as root (it lives under /Library), restarting the service
+	# only if the wrapper is currently active.
+	local restart=""
+	is_installed && restart="$RESTART_PTP"
+	run_admin "set -e
+cat > \"$CONF\" <<'CONFEOF'
+# DVS PTP MITM configuration (written by dvs-ptp-mitm.command)
+leader = $new_leader
+ptpv2  = $new_ptpv2
+CONFEOF
+chmod 644 \"$CONF\"
+$restart" || { info "Saving options was cancelled or failed."; return; }
 	if is_installed; then
 		info "Options saved (leader=$new_leader, ptpv2=$new_ptpv2) and PTP service restarted."
 	else
