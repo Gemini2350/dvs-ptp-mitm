@@ -17,24 +17,24 @@ jobs:
 
       - name: Build universal binary (arm64 + x86_64)
         run: |
-          cc -arch arm64 -arch x86_64 -Wall -o ptp-mitm ptp-mitm.c
-          lipo -info ptp-mitm
+          cc -arch arm64 -arch x86_64 -Wall -o dvs-ptpv2-unlock dvs-ptpv2-unlock.c
+          lipo -info dvs-ptpv2-unlock
 
       - name: Build the self-contained launcher app
         run: ./build-app.sh
 
       - name: Package a ready-to-use bundle
         run: |
-          mkdir -p "dist/dvs-ptp-mitm"
-          cp ptp-mitm ptp-mitm.conf dvs-ptp-mitm.command README.md "dist/dvs-ptp-mitm/"
-          cp -R "DVS PTP MITM.app" "dist/dvs-ptp-mitm/"
-          chmod +x "dist/dvs-ptp-mitm/dvs-ptp-mitm.command"
-          ( cd dist && zip -r ../dvs-ptp-mitm-macos.zip "dvs-ptp-mitm" )
+          mkdir -p "dist/dvs-ptpv2-unlock"
+          cp dvs-ptpv2-unlock dvs-ptpv2-unlock.conf dvs-ptpv2-unlock.command README.md "dist/dvs-ptpv2-unlock/"
+          cp -R "DVS PTPv2 Unlock.app" "dist/dvs-ptpv2-unlock/"
+          chmod +x "dist/dvs-ptpv2-unlock/dvs-ptpv2-unlock.command"
+          ( cd dist && zip -r ../dvs-ptpv2-unlock-macos.zip "dvs-ptpv2-unlock" )
 
       - uses: actions/upload-artifact@v4
         with:
-          name: dvs-ptp-mitm-macos
-          path: dvs-ptp-mitm-macos.zip
+          name: dvs-ptpv2-unlock-macos
+          path: dvs-ptpv2-unlock-macos.zip
 
   windows:
     runs-on: windows-latest
@@ -46,25 +46,25 @@ jobs:
         run: |
           $errors = $null
           [System.Management.Automation.Language.Parser]::ParseFile(
-            "$PWD/dvs-ptp-mitm.ps1", [ref]$null, [ref]$errors) | Out-Null
+            "$PWD/dvs-ptpv2-unlock.ps1", [ref]$null, [ref]$errors) | Out-Null
           if ($errors) { $errors | ForEach-Object { Write-Error $_ }; exit 1 }
           Write-Host "PowerShell syntax OK"
 
-      - name: Build ptp-mitm.exe
+      - name: Build dvs-ptpv2-unlock.exe
         shell: cmd
-        run: gcc -DWIN32 -O2 -o ptp-mitm.exe ptp-mitm.c
+        run: gcc -DWIN32 -O2 -o dvs-ptpv2-unlock.exe dvs-ptpv2-unlock.c
 
       - name: Package a ready-to-use bundle
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path "dist/dvs-ptp-mitm" | Out-Null
-          Copy-Item ptp-mitm.exe, ptp-mitm.conf, dvs-ptp-mitm.ps1, 'DVS PTP MITM.cmd', README.md "dist/dvs-ptp-mitm/"
-          Compress-Archive -Path "dist/dvs-ptp-mitm" -DestinationPath dvs-ptp-mitm-windows.zip -Force
+          New-Item -ItemType Directory -Force -Path "dist/dvs-ptpv2-unlock" | Out-Null
+          Copy-Item dvs-ptpv2-unlock.exe, dvs-ptpv2-unlock.conf, dvs-ptpv2-unlock.ps1, 'DVS PTPv2 Unlock.cmd', README.md "dist/dvs-ptpv2-unlock/"
+          Compress-Archive -Path "dist/dvs-ptpv2-unlock" -DestinationPath dvs-ptpv2-unlock-windows.zip -Force
 
       - uses: actions/upload-artifact@v4
         with:
-          name: dvs-ptp-mitm-windows
-          path: dvs-ptp-mitm-windows.zip
+          name: dvs-ptpv2-unlock-windows
+          path: dvs-ptpv2-unlock-windows.zip
 
   release:
     needs: [macos, windows]
@@ -83,5 +83,5 @@ jobs:
             --repo "${GITHUB_REPOSITORY}" \
             --title "${GITHUB_REF_NAME}" \
             --generate-notes \
-            artifacts/dvs-ptp-mitm-macos/dvs-ptp-mitm-macos.zip \
-            artifacts/dvs-ptp-mitm-windows/dvs-ptp-mitm-windows.zip
+            artifacts/dvs-ptpv2-unlock-macos/dvs-ptpv2-unlock-macos.zip \
+            artifacts/dvs-ptpv2-unlock-windows/dvs-ptpv2-unlock-windows.zip

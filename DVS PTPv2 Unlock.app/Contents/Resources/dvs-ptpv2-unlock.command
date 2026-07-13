@@ -1,9 +1,9 @@
 #!/bin/bash
 #
-# DVS PTP MITM -- one double-click control panel (macOS)
+# DVS PTPv2 Unlock -- one double-click control panel (macOS)
 #
 # Double-click this file in Finder. It opens a small menu where you can
-# activate/deactivate the man-in-the-middle wrapper and toggle its options
+# activate/deactivate the PTP wrapper and toggle its options
 # (PTPv2, leader mode) without ever touching the Terminal, a compiler, or
 # the config file by hand. Privileged steps ask for your password once via
 # the standard macOS dialog.
@@ -14,7 +14,7 @@ DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$DIR"
 
 DVSDIR="/Library/Application Support/Audinate/DanteVirtualSoundcard"
-CONF="$DVSDIR/ptp-mitm.conf"
+CONF="$DVSDIR/dvs-ptpv2-unlock.conf"
 
 # --- small helpers -------------------------------------------------------
 
@@ -23,7 +23,7 @@ osa() { osascript -e "$1"; }
 
 # Show a plain informational dialog.
 info() {
-	osa "display dialog \"$1\" buttons {\"OK\"} default button \"OK\" with title \"DVS PTP MITM\"" >/dev/null 2>&1 || true
+	osa "display dialog \"$1\" buttons {\"OK\"} default button \"OK\" with title \"DVS PTPv2 Unlock\"" >/dev/null 2>&1 || true
 }
 
 # Read a boolean key ("1"/"0") from the config file; default 0 if absent.
@@ -40,16 +40,16 @@ conf_get() {
 
 is_installed() { [ -f "$DVSDIR/ptp-original" ]; }
 
-# Make sure a ptp-mitm binary is available.
+# Make sure a dvs-ptpv2-unlock binary is available.
 # Prefer a prebuilt binary shipped alongside this script (from the GitHub
 # release) so no compiler is needed. Only compile from source as a fallback,
 # e.g. when running from a plain "git clone".
 ensure_built() {
-	if [ -f ptp-mitm ]; then
+	if [ -f dvs-ptpv2-unlock ]; then
 		return					# prebuilt (or previously built) binary present
 	fi
-	if [ ! -f ptp-mitm.c ]; then
-		info "No ptp-mitm binary and no source to build it from. Please download a release."
+	if [ ! -f dvs-ptpv2-unlock.c ]; then
+		info "No dvs-ptpv2-unlock binary and no source to build it from. Please download a release."
 		exit 1
 	fi
 	local cc
@@ -58,8 +58,8 @@ ensure_built() {
 		info "No prebuilt binary found and no C compiler available.\n\nEither download a release (recommended) or run 'xcode-select --install' and try again."
 		exit 1
 	fi
-	"$cc" -arch arm64 -arch x86_64 -o ptp-mitm ptp-mitm.c 2>/dev/null \
-		|| "$cc" -o ptp-mitm ptp-mitm.c		# fall back to native-only if universal build fails
+	"$cc" -arch arm64 -arch x86_64 -o dvs-ptpv2-unlock dvs-ptpv2-unlock.c 2>/dev/null \
+		|| "$cc" -o dvs-ptpv2-unlock dvs-ptpv2-unlock.c		# fall back to native-only if universal build fails
 }
 
 # Shell snippet (run as root) that restarts the DVS PTP service so changes take
@@ -77,7 +77,7 @@ RESTART_PTP='pkill -f "DanteVirtualSoundcard/ptp" 2>/dev/null || true'
 # Returns the elevated script's exit status; non-zero if the user cancels.
 run_admin() {
 	local tmp rc
-	tmp="$(mktemp -t dvs-ptp-mitm)" || return 1
+	tmp="$(mktemp -t dvs-ptpv2-unlock)" || return 1
 	printf '%s\n' "$1" > "$tmp"
 	osascript -e "do shell script \"/bin/bash '$tmp'\" with administrator privileges" >/dev/null
 	rc=$?
@@ -93,12 +93,12 @@ do_activate() {
 	run_admin "set -e
 cd \"$DIR\"
 if [ ! -f \"$DVSDIR/ptp-original\" ]; then cp \"$DVSDIR/ptp\" \"$DVSDIR/ptp-original\"; fi
-cp ptp-mitm \"$DVSDIR/ptp\"
+cp dvs-ptpv2-unlock \"$DVSDIR/ptp\"
 chown root:admin \"$DVSDIR/ptp\"
 chmod 755 \"$DVSDIR/ptp\"
-if [ ! -f \"$CONF\" ]; then cp ptp-mitm.conf \"$CONF\"; chmod 644 \"$CONF\"; fi
+if [ ! -f \"$CONF\" ]; then cp dvs-ptpv2-unlock.conf \"$CONF\"; chmod 644 \"$CONF\"; fi
 $RESTART_PTP" \
-		&& info "MITM wrapper activated and PTP service restarted." \
+		&& info "PTP wrapper activated and PTP service restarted." \
 		|| info "Activation was cancelled or failed."
 }
 
@@ -128,7 +128,7 @@ edit_options() {
 	preselect=$(IFS=,; echo "${sel[*]:-}")
 
 	selection=$(osa "set chosen to choose from list {\"PTPv2 support\", \"Allow DVS to become leader\"} \
-		with title \"DVS PTP MITM options\" \
+		with title \"DVS PTPv2 Unlock options\" \
 		with prompt \"Enable which features?\" \
 		default items {${preselect}} \
 		with multiple selections allowed and empty selection allowed
@@ -149,7 +149,7 @@ edit_options() {
 	is_installed && restart="$RESTART_PTP"
 	run_admin "set -e
 cat > \"$CONF\" <<'CONFEOF'
-# DVS PTP MITM configuration (written by dvs-ptp-mitm.command)
+# DVS PTPv2 Unlock configuration (written by dvs-ptpv2-unlock.command)
 leader = $new_leader
 ptpv2  = $new_ptpv2
 CONFEOF
@@ -193,7 +193,7 @@ while true; do
 	is_installed && state="active"
 	choice=$(osa "set c to choose from list \
 		{\"Activate wrapper\", \"Deactivate wrapper\", \"Edit options (PTPv2 / leader)\", \"Show status\", \"Quit\"} \
-		with title \"DVS PTP MITM  (currently: $state)\" \
+		with title \"DVS PTPv2 Unlock  (currently: $state)\" \
 		with prompt \"What would you like to do?\" \
 		default items {\"Show status\"}
 		if c is false then return \"Quit\"

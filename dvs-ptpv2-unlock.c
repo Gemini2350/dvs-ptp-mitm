@@ -35,11 +35,11 @@
 #ifdef WIN32
 const char DvsPath[] = "C:\\Program Files\\Audinate\\Dante Virtual Soundcard\\ptp-original.exe";
 const char DvsPathArg[] = "\"C:\\Program Files\\Audinate\\Dante Virtual Soundcard\\ptp-original.exe\"";
-const char ConfPath[] = "C:\\Program Files\\Audinate\\Dante Virtual Soundcard\\ptp-mitm.conf";
+const char ConfPath[] = "C:\\Program Files\\Audinate\\Dante Virtual Soundcard\\dvs-ptpv2-unlock.conf";
 #else
 const char DvsPath[] = "/Library/Application Support/Audinate/DanteVirtualSoundcard/ptp-original";
 #define DvsPathArg DvsPath
-const char ConfPath[] = "/Library/Application Support/Audinate/DanteVirtualSoundcard/ptp-mitm.conf";
+const char ConfPath[] = "/Library/Application Support/Audinate/DanteVirtualSoundcard/dvs-ptpv2-unlock.conf";
 #endif
 
 
@@ -101,7 +101,7 @@ int main(int argc, char *argv[], char *envp[])
 	int enable_ptpv2 = DEFAULT_ENABLE_PTPV2;
 	load_config(&allow_leader, &enable_ptpv2);
 
-	printf("<3 DVS PTP HACK <3  (leader=%d ptpv2=%d)\n", allow_leader, enable_ptpv2);
+	printf("<3 DVS PTPv2 Unlock <3  (leader=%d ptpv2=%d)\n", allow_leader, enable_ptpv2);
 
 	// upper bound on argument count: original args + PTPv2 additions + NULL
 	argsc = argc + 3;

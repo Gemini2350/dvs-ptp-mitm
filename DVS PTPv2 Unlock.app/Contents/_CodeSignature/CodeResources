@@ -10,7 +10,7 @@
 		</data>
 		<key>Resources/Scripts/main.scpt</key>
 		<data>
-		YsG4tZuFLiK1ZhWogL91vQSNrac=
+		J9ns3v5nmxdrSaNCjXd5vcUKPqY=
 		</data>
 		<key>Resources/applet.icns</key>
 		<data>
@@ -20,13 +20,13 @@
 		<data>
 		ar5xmDs9mPpaINVXiVlVqUCB8ao=
 		</data>
-		<key>Resources/dvs-ptp-mitm.command</key>
+		<key>Resources/dvs-ptpv2-unlock.command</key>
 		<data>
-		r5C6ZTjbjwefurHZkMZGyu//3bs=
+		SDRn3mYR73eiIXX991D5el89evs=
 		</data>
-		<key>Resources/ptp-mitm.conf</key>
+		<key>Resources/dvs-ptpv2-unlock.conf</key>
 		<data>
-		G59nUkSn/34WJ0w+COMiK+QMQWE=
+		U6q3iqTbsA5EW37b5W/pg7yfg0k=
 		</data>
 	</dict>
 	<key>files2</key>
@@ -46,11 +46,11 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			YsG4tZuFLiK1ZhWogL91vQSNrac=
+			J9ns3v5nmxdrSaNCjXd5vcUKPqY=
 			</data>
 			<key>hash2</key>
 			<data>
-			VAo3ds2Kd+VL/3B3q+3Cb3dXAgDtqwul4Q255qxs7IQ=
+			7DF/fRO109gAcCmOz2PNJDy8z22t2NI5WDG1nRIhKnc=
 			</data>
 		</dict>
 		<key>Resources/applet.icns</key>
@@ -75,26 +75,26 @@
 			NV2dNLwgykV7aWfTBywUILBA9Lidl7F51PrkQw77SbM=
 			</data>
 		</dict>
-		<key>Resources/dvs-ptp-mitm.command</key>
+		<key>Resources/dvs-ptpv2-unlock.command</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			r5C6ZTjbjwefurHZkMZGyu//3bs=
+			SDRn3mYR73eiIXX991D5el89evs=
 			</data>
 			<key>hash2</key>
 			<data>
-			MSr+mCiNqRdDNCYkYLXsMtIzEZtlU/iIaDBxOZv9IEM=
+			7dXV+WjiyGopQK5+WS5N4spH8uRcMwbOKw3LNtrzajU=
 			</data>
 		</dict>
-		<key>Resources/ptp-mitm.conf</key>
+		<key>Resources/dvs-ptpv2-unlock.conf</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			G59nUkSn/34WJ0w+COMiK+QMQWE=
+			U6q3iqTbsA5EW37b5W/pg7yfg0k=
 			</data>
 			<key>hash2</key>
 			<data>
-			P4BLkgOHkScdPNuosggJxEhunCebCF4eVtaS+lH3Rg8=
+			fPvhd+2yS8gZuSD8c1J33rePD5Sr8olgQCLJeY3xSYo=
 			</data>
 		</dict>
 	</dict>

@@ -1,7 +1,7 @@
-# DVS PTP MITM -- Windows control panel
+# DVS PTPv2 Unlock -- Windows control panel
 #
-# Double-click "DVS PTP MITM.cmd" (which launches this script). It opens a small
-# menu to activate/deactivate the man-in-the-middle wrapper and toggle its
+# Double-click "DVS PTPv2 Unlock.cmd" (which launches this script). It opens a small
+# menu to activate/deactivate the PTP wrapper and toggle its
 # options (PTPv2, leader mode). It elevates via UAC once, applies the change,
 # and restarts the Dante Virtual Soundcard service so it takes effect.
 
@@ -20,7 +20,7 @@ if (-not $principal.IsInRole([Security.Principal.WindowsBuiltinRole]::Administra
 $DvsDir = 'C:\Program Files\Audinate\Dante Virtual Soundcard'
 $Ptp    = Join-Path $DvsDir 'ptp.exe'
 $Orig   = Join-Path $DvsDir 'ptp-original.exe'
-$Conf   = Join-Path $DvsDir 'ptp-mitm.conf'
+$Conf   = Join-Path $DvsDir 'dvs-ptpv2-unlock.conf'
 
 # --- helpers ----------------------------------------------------------------
 
@@ -38,21 +38,21 @@ function Set-Conf([bool]$leader, [bool]$ptpv2) {
     $l = if ($leader) { 1 } else { 0 }
     $p = if ($ptpv2)  { 1 } else { 0 }
     @(
-        '# DVS PTP MITM configuration (written by dvs-ptp-mitm.ps1)'
+        '# DVS PTPv2 Unlock configuration (written by dvs-ptpv2-unlock.ps1)'
         "leader = $l"
         "ptpv2  = $p"
     ) | Set-Content -Path $Conf -Encoding ASCII
 }
 
-# Make sure a ptp-mitm.exe is available: prefer the prebuilt one shipped next to
+# Make sure a dvs-ptpv2-unlock.exe is available: prefer the prebuilt one shipped next to
 # this script; only compile from source as a fallback.
 function Get-Binary {
-    $local = Join-Path $PSScriptRoot 'ptp-mitm.exe'
+    $local = Join-Path $PSScriptRoot 'dvs-ptpv2-unlock.exe'
     if (Test-Path $local) { return $local }
-    $src = Join-Path $PSScriptRoot 'ptp-mitm.c'
-    if (-not (Test-Path $src)) { throw "No ptp-mitm.exe and no source to build it. Please download a release." }
+    $src = Join-Path $PSScriptRoot 'dvs-ptpv2-unlock.c'
+    if (-not (Test-Path $src)) { throw "No dvs-ptpv2-unlock.exe and no source to build it. Please download a release." }
     $cc = (Get-Command gcc, cc, clang -ErrorAction SilentlyContinue | Select-Object -First 1)
-    if (-not $cc) { throw "No prebuilt ptp-mitm.exe and no C compiler found. Download a release, or install MinGW." }
+    if (-not $cc) { throw "No prebuilt dvs-ptpv2-unlock.exe and no C compiler found. Download a release, or install MinGW." }
     & $cc.Source '-DWIN32' '-O2' '-o' $local $src
     return $local
 }
@@ -78,7 +78,7 @@ function Invoke-Activate {
     }
     Copy-Item $bin $Ptp -Force
     if (-not (Test-Path $Conf)) {
-        Copy-Item (Join-Path $PSScriptRoot 'ptp-mitm.conf') $Conf
+        Copy-Item (Join-Path $PSScriptRoot 'dvs-ptpv2-unlock.conf') $Conf
     }
     Restart-Dvs
     Write-Host "`nActivated and DVS PTP service restarted." -ForegroundColor Green
@@ -134,7 +134,7 @@ $quit = $false
 while (-not $quit) {
     $state = if (Test-Installed) { 'active' } else { 'not installed' }
     Write-Host ""
-    Write-Host "===== DVS PTP MITM  (currently: $state) =====" -ForegroundColor Cyan
+    Write-Host "===== DVS PTPv2 Unlock  (currently: $state) =====" -ForegroundColor Cyan
     Write-Host "  1) Activate wrapper"
     Write-Host "  2) Deactivate wrapper"
     Write-Host "  3) Edit options (PTPv2 / leader)"
