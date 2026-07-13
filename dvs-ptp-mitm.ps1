@@ -113,17 +113,19 @@ function Get-LiveStatus {
         Select-Object -First 1
     if (-not $proc) { return 'PTP service not running' }
     $cmd = " $($proc.CommandLine) "
-    $p = if ($cmd -match '\s-y2')  { 'ON' } else { 'off' }   # wrapper appends -y2=-2 for PTPv2
-    $l = if ($cmd -match '\s-s\s') { 'off' } else { 'ON' }   # DVS passes -s for slave-only
-    return "running now -> PTPv2 $p, leader $l"
+    $p = if ($cmd -match '\s-y2')  { 'enabled' } else { 'disabled' }   # wrapper appends -y2=-2 for PTPv2
+    $l = if ($cmd -match '\s-s\s') { 'disabled' } else { 'enabled' }   # DVS passes -s for slave-only
+    return "PTPv2 $p, leader mode $l"
 }
 
+function YesNo([bool]$b) { if ($b) { 'enabled' } else { 'disabled' } }
+
 function Show-Status {
-    $state = if (Test-Installed) { 'INSTALLED' } else { 'not installed' }
+    $state = if (Test-Installed) { 'installed' } else { 'not installed' }
     Write-Host ""
     Write-Host "Wrapper : $state"
-    Write-Host "Config (desired):  leader = $(if (Get-ConfValue 'leader') {1} else {0}), ptpv2 = $(if (Get-ConfValue 'ptpv2') {1} else {0})"
-    Write-Host "Live (effective):  $(Get-LiveStatus)"
+    Write-Host "Configured (desired):   PTPv2: $(YesNo (Get-ConfValue 'ptpv2')), Leader mode: $(YesNo (Get-ConfValue 'leader'))"
+    Write-Host "Live (what DVS runs now):  $(Get-LiveStatus)"
     Write-Host "config file: $Conf"
 }
 

@@ -156,9 +156,9 @@ CONFEOF
 chmod 644 \"$CONF\"
 $restart" || { info "Saving options was cancelled or failed."; return; }
 	if is_installed; then
-		info "Options saved (leader=$new_leader, ptpv2=$new_ptpv2) and PTP service restarted."
+		info "Options saved (PTPv2 $(yesno "$new_ptpv2"), leader mode $(yesno "$new_leader")) and PTP service restarted."
 	else
-		info "Options saved (leader=$new_leader, ptpv2=$new_ptpv2). They apply once you activate the wrapper."
+		info "Options saved (PTPv2 $(yesno "$new_ptpv2"), leader mode $(yesno "$new_leader")). They apply once you activate the wrapper."
 	fi
 }
 
@@ -172,16 +172,18 @@ live_status() {
 		echo "PTP service not running"
 		return
 	fi
-	local p="off" l="off"
-	case " $proc " in *" -y2"*) p="ON" ;; esac	# wrapper appends -y2=-2 for PTPv2
-	case " $proc " in *" -s "*) l="off" ;; *) l="ON" ;; esac	# DVS passes -s for slave-only
-	echo "running now -> PTPv2 $p, leader $l"
+	local p="disabled" l="disabled"
+	case " $proc " in *" -y2"*) p="enabled" ;; esac	# wrapper appends -y2=-2 for PTPv2
+	case " $proc " in *" -s "*) l="disabled" ;; *) l="enabled" ;; esac	# DVS passes -s for slave-only
+	echo "PTPv2 $p, leader mode $l"
 }
 
+# Turn a 0/1 config value into a readable word.
+yesno() { if [ "$1" = "1" ]; then echo "enabled"; else echo "disabled"; fi; }
+
 show_status() {
-	local state="not installed"
-	is_installed && state="INSTALLED"
-	info "Wrapper: $state\n\nConfig (desired):\n    leader = $(conf_get leader)\n    ptpv2 = $(conf_get ptpv2)\n\nLive (effective):\n    $(live_status)\n\nConfig file: $CONF"
+	local state="installed" ; is_installed || state="not installed"
+	info "Wrapper: $state\n\nConfigured (desired):\n    PTPv2: $(yesno "$(conf_get ptpv2)")\n    Leader mode: $(yesno "$(conf_get leader)")\n\nLive (what DVS runs now):\n    $(live_status)\n\nConfig file: $CONF"
 }
 
 # --- main menu loop ------------------------------------------------------
