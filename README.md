@@ -39,33 +39,36 @@ arguments except for the options you turn on**:
   leader / grandmaster.
 
 Both options are read at **runtime** from a small config file
-(`ptp-mitm.conf`), so once installed you can change them and just restart DVS —
+(`ptp-mitm.conf`), so once installed you can change them at any time —
 **no editing source, no recompiling, no reinstalling.**
 
 
-## Easiest way (macOS): the control panel
+## Easiest way (macOS): download and double-click
 
-Double-click **`dvs-ptp-mitm.command`**. A small menu opens where you can:
+1. Download the latest **`dvs-ptp-mitm-macos.zip`** from the
+   [Releases](../../releases) page and unzip it. It contains a **prebuilt
+   universal binary**, so you need **no compiler and no Terminal**.
+2. Double-click **`DVS PTP MITM.app`**. A small menu opens where you can:
+   - **Activate** / **Deactivate** the wrapper,
+   - **Edit options** (tick PTPv2 and/or leader mode),
+   - **Show status**.
+3. Enter your password once when macOS asks. The app applies the change and
+   **restarts the PTP service for you** — no manual DVS restart needed.
 
-- **Activate** / **Deactivate** the wrapper,
-- **Edit options** (tick PTPv2 and/or leader mode),
-- **Show status**.
+> First launch: because the app isn't from the App Store, macOS may block it.
+> Right-click **`DVS PTP MITM.app`** → **Open** → **Open**. You only do this once.
 
-It compiles the binary for you if needed and asks for your password once via the
-standard macOS dialog. That's it — no Terminal required.
-
-> If double-clicking is blocked, right-click the file → **Open**, or run
-> `chmod +x dvs-ptp-mitm.command` once. It needs the Command Line Tools
-> (`xcode-select --install`) so it can compile.
-
-After activating or changing options, **restart the Dante Virtual Soundcard**.
+`dvs-ptp-mitm.command` is the same control panel without the app wrapper —
+double-click it directly if you prefer. If you run it from a plain `git clone`
+(no prebuilt binary), it compiles the binary for you, which needs the Command
+Line Tools (`xcode-select --install`).
 
 
 ## Turning options on/off after install
 
-Edit `ptp-mitm.conf` inside the DVS folder (or use the control panel's *Edit
-options*), then restart DVS. Values accept `1/0`, `true/false`, `yes/no`,
-`on/off`:
+Use the control panel's **Edit options** (it applies the change and restarts the
+PTP service for you). Or edit `ptp-mitm.conf` inside the DVS folder by hand and
+restart DVS yourself. Values accept `1/0`, `true/false`, `yes/no`, `on/off`:
 
 ```
 leader = 1

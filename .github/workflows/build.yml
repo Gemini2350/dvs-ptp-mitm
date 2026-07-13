@@ -1,0 +1,46 @@
+name: build
+
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+  pull_request:
+
+permissions:
+  contents: write   # needed to attach assets when releasing on a tag
+
+jobs:
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build universal binary (arm64 + x86_64)
+        run: |
+          cc -arch arm64 -arch x86_64 -Wall -o ptp-mitm ptp-mitm.c
+          lipo -info ptp-mitm
+
+      - name: Rebuild the launcher app
+        run: |
+          rm -rf "DVS PTP MITM.app"
+          osacompile -o "DVS PTP MITM.app" app-src.applescript
+
+      - name: Package a ready-to-use bundle
+        run: |
+          mkdir -p "dist/dvs-ptp-mitm"
+          cp ptp-mitm ptp-mitm.conf dvs-ptp-mitm.command README.md "dist/dvs-ptp-mitm/"
+          cp -R "DVS PTP MITM.app" "dist/dvs-ptp-mitm/"
+          chmod +x "dist/dvs-ptp-mitm/dvs-ptp-mitm.command"
+          ( cd dist && zip -r ../dvs-ptp-mitm-macos.zip "dvs-ptp-mitm" )
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dvs-ptp-mitm-macos
+          path: dvs-ptp-mitm-macos.zip
+
+      - name: Attach to release (on tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" dvs-ptp-mitm-macos.zip --generate-notes --title "${GITHUB_REF_NAME}"

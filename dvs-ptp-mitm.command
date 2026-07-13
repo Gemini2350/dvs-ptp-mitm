@@ -40,18 +40,32 @@ conf_get() {
 
 is_installed() { [ -f "$DVSDIR/ptp-original" ]; }
 
-# Compile ptp-mitm if the binary is missing or older than the source.
+# Make sure a ptp-mitm binary is available.
+# Prefer a prebuilt binary shipped alongside this script (from the GitHub
+# release) so no compiler is needed. Only compile from source as a fallback,
+# e.g. when running from a plain "git clone".
 ensure_built() {
-	if [ ! -f ptp-mitm ] || [ ptp-mitm.c -nt ptp-mitm ]; then
-		local cc
-		cc=$(command -v cc || command -v clang || command -v gcc || true)
-		if [ -z "$cc" ]; then
-			info "No C compiler found. Please run 'xcode-select --install' first, then try again."
-			exit 1
-		fi
-		"$cc" -o ptp-mitm ptp-mitm.c
+	if [ -f ptp-mitm ]; then
+		return					# prebuilt (or previously built) binary present
 	fi
+	if [ ! -f ptp-mitm.c ]; then
+		info "No ptp-mitm binary and no source to build it from. Please download a release."
+		exit 1
+	fi
+	local cc
+	cc=$(command -v cc || command -v clang || command -v gcc || true)
+	if [ -z "$cc" ]; then
+		info "No prebuilt binary found and no C compiler available.\n\nEither download a release (recommended) or run 'xcode-select --install' and try again."
+		exit 1
+	fi
+	"$cc" -arch arm64 -arch x86_64 -o ptp-mitm ptp-mitm.c 2>/dev/null \
+		|| "$cc" -o ptp-mitm ptp-mitm.c		# fall back to native-only if universal build fails
 }
+
+# Shell snippet (run as root) that restarts the DVS PTP service so changes take
+# effect immediately. DVS supervises the ptp process and respawns it, picking up
+# the new binary/config. Best-effort: silent if the process is not running.
+RESTART_PTP='pkill -f "DanteVirtualSoundcard/ptp" 2>/dev/null || true'
 
 # --- privileged actions (single password prompt each) --------------------
 
@@ -62,9 +76,10 @@ do_activate() {
 	script="set -e; cd \"$DIR\"; \
 		if [ ! -f \"$DVSDIR/ptp-original\" ]; then cp \"$DVSDIR/ptp\" \"$DVSDIR/ptp-original\"; fi; \
 		cp ptp-mitm \"$DVSDIR/ptp\"; chown root:admin \"$DVSDIR/ptp\"; chmod 755 \"$DVSDIR/ptp\"; \
-		if [ ! -f \"$CONF\" ]; then cp ptp-mitm.conf \"$CONF\"; chmod 644 \"$CONF\"; fi"
+		if [ ! -f \"$CONF\" ]; then cp ptp-mitm.conf \"$CONF\"; chmod 644 \"$CONF\"; fi; \
+		$RESTART_PTP"
 	osa "do shell script \"$script\" with administrator privileges" >/dev/null
-	info "MITM wrapper activated. Restart the Dante Virtual Soundcard for changes to take effect."
+	info "MITM wrapper activated and PTP service restarted."
 }
 
 do_deactivate() {
@@ -73,9 +88,10 @@ do_deactivate() {
 		return
 	fi
 	local script
-	script="set -e; mv \"$DVSDIR/ptp-original\" \"$DVSDIR/ptp\"; chown root:admin \"$DVSDIR/ptp\""
+	script="set -e; mv \"$DVSDIR/ptp-original\" \"$DVSDIR/ptp\"; chown root:admin \"$DVSDIR/ptp\"; \
+		$RESTART_PTP"
 	osa "do shell script \"$script\" with administrator privileges" >/dev/null
-	info "Original ptp restored. Restart the Dante Virtual Soundcard for changes to take effect."
+	info "Original ptp restored and PTP service restarted."
 }
 
 # Present checkboxes for the two options and write the config file.
@@ -106,10 +122,16 @@ edit_options() {
 	case "$selection" in *"Allow DVS to become leader"*) new_leader=1 ;; esac
 
 	# Write the config as root (it lives under /Library).
-	local body
+	local body restart=""
 	body="# DVS PTP MITM configuration (written by dvs-ptp-mitm.command)\nleader = $new_leader\nptpv2 = $new_ptpv2\n"
-	osa "do shell script \"printf '$body' > '$CONF'; chmod 644 '$CONF'\" with administrator privileges" >/dev/null
-	info "Options saved (leader=$new_leader, ptpv2=$new_ptpv2). Restart the Dante Virtual Soundcard to apply."
+	# If the wrapper is active, restart the PTP service so the new options apply.
+	is_installed && restart="; $RESTART_PTP"
+	osa "do shell script \"printf '$body' > '$CONF'; chmod 644 '$CONF'$restart\" with administrator privileges" >/dev/null
+	if is_installed; then
+		info "Options saved (leader=$new_leader, ptpv2=$new_ptpv2) and PTP service restarted."
+	else
+		info "Options saved (leader=$new_leader, ptpv2=$new_ptpv2). They apply once you activate the wrapper."
+	fi
 }
 
 show_status() {
