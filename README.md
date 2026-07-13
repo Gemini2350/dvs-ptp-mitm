@@ -108,16 +108,28 @@ Steps:
 > after updating DVS.
 
 
-## Windows
+## Windows: download and double-click
 
-The Makefile / scripts don't run on Windows; compile and install manually.
+1. Download the latest **`dvs-ptp-mitm-windows.zip`** from the
+   [Releases](../../releases) page and unzip it. It contains a **prebuilt
+   `ptp-mitm.exe`**, so you need no compiler.
+2. Double-click **`DVS PTP MITM.cmd`**. Windows asks for administrator rights
+   (UAC) once, then a menu opens where you can **Activate** / **Deactivate** the
+   wrapper, **Edit options** (PTPv2 / leader), and **Show status**.
+3. Each change is applied and the **Dante Virtual Soundcard service is restarted
+   for you** — no manual restart needed.
 
-If you have no compiler, the mingw installer works:
-https://github.com/Vuniverse0/mingwInstaller/releases/
+> The `.cmd` just launches `dvs-ptp-mitm.ps1` with the execution policy bypassed
+> for that one run; nothing is changed permanently on your system.
+
+### Manual Windows build (optional)
+
+If you'd rather build it yourself and have no compiler, the mingw installer
+works: https://github.com/Vuniverse0/mingwInstaller/releases/
 
 Compile (in the folder with `ptp-mitm.c`):
 
-`cc -o ptp-mitm ptp-mitm.c`
+`gcc -DWIN32 -o ptp-mitm.exe ptp-mitm.c`
 
 Then, in `C:\Program Files\Audinate\Dante Virtual Soundcard`, rename `ptp.exe`
 to `ptp-original.exe`, put `ptp-mitm.exe` in its place as `ptp.exe`, and create a

@@ -33,14 +33,57 @@ jobs:
           chmod +x "dist/dvs-ptp-mitm/dvs-ptp-mitm.command"
           ( cd dist && zip -r ../dvs-ptp-mitm-macos.zip "dvs-ptp-mitm" )
 
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: dvs-ptp-mitm-macos
           path: dvs-ptp-mitm-macos.zip
 
-      - name: Attach to release (on tag)
-        if: startsWith(github.ref, 'refs/tags/')
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check PowerShell script syntax
+        shell: pwsh
+        run: |
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            "$PWD/dvs-ptp-mitm.ps1", [ref]$null, [ref]$errors) | Out-Null
+          if ($errors) { $errors | ForEach-Object { Write-Error $_ }; exit 1 }
+          Write-Host "PowerShell syntax OK"
+
+      - name: Build ptp-mitm.exe
+        shell: cmd
+        run: gcc -DWIN32 -O2 -o ptp-mitm.exe ptp-mitm.c
+
+      - name: Package a ready-to-use bundle
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "dist/dvs-ptp-mitm" | Out-Null
+          Copy-Item ptp-mitm.exe, ptp-mitm.conf, dvs-ptp-mitm.ps1, 'DVS PTP MITM.cmd', README.md "dist/dvs-ptp-mitm/"
+          Compress-Archive -Path "dist/dvs-ptp-mitm" -DestinationPath dvs-ptp-mitm-windows.zip -Force
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dvs-ptp-mitm-windows
+          path: dvs-ptp-mitm-windows.zip
+
+  release:
+    needs: [macos, windows]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create release with macOS + Windows bundles
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${GITHUB_REF_NAME}" dvs-ptp-mitm-macos.zip --generate-notes --title "${GITHUB_REF_NAME}"
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "${GITHUB_REF_NAME}" \
+            --generate-notes \
+            artifacts/dvs-ptp-mitm-macos/dvs-ptp-mitm-macos.zip \
+            artifacts/dvs-ptp-mitm-windows/dvs-ptp-mitm-windows.zip
