@@ -20,10 +20,8 @@ jobs:
           cc -arch arm64 -arch x86_64 -Wall -o ptp-mitm ptp-mitm.c
           lipo -info ptp-mitm
 
-      - name: Rebuild the launcher app
-        run: |
-          rm -rf "DVS PTP MITM.app"
-          osacompile -o "DVS PTP MITM.app" app-src.applescript
+      - name: Build the self-contained launcher app
+        run: ./build-app.sh
 
       - name: Package a ready-to-use bundle
         run: |
